@@ -22,11 +22,17 @@ const config = {
       hooks: '.kit/src/hooks.js'
     },
 
-    // vite: {
-    //   ssr: {
-    //     noExternal: Object.keys(pkg.dependencies || {})
-    //   }
-    // }
+    vite: {
+      // ssr: {
+      //   noExternal: Object.keys(pkg.dependencies || {})
+      // },
+      server: {
+        fs: {
+          // Allow serving files from one level up to the project root
+          allow: ['..']
+        }
+      }
+    }
   }
 }
 
