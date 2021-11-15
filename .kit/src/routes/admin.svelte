@@ -196,7 +196,7 @@
     margin-bottom: 1em;
   }
 
-  * :global(input, textarea, select) {
+  * :where(:global(input), :global(textarea), :global(select)) {
     display: block;
     margin-top: 0.5em;
     margin-bottom: 1em;
