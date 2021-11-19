@@ -1,6 +1,8 @@
 // Initial settings.
 
 module.exports = {
+  version: 7,
+
   org: {
     name: '',
     address: '',
@@ -8,7 +10,6 @@ module.exports = {
     email: ''
   },
 
-  // Note: these will be arrays later on to accommodate other providers.
   payment: {
     provider: 0,
     providers: [
@@ -59,15 +60,30 @@ module.exports = {
   },
 
   vps: {
-    provider: 'Hetzner',
-    apiToken: '',
-    sshKeyName: '',
-    sshKey: '',
-    serverType: 'cpx11',
-    location: 'hel1',
-    image: 'ubuntu-20.04'
+    provider: 0,
+    providers: [
+      {
+        name: 'Hetzner',
+        apiToken: '',
+        sshKeyName: '',
+        sshKey: '',
+        serverType: 'cpx11',
+        location: 'hel1',
+        image: 'ubuntu-20.04'
+      },
+      {
+        name: 'Scaleway',
+        apiToken: '',
+        sshKeyName: '',
+        sshKey: '',
+        serverType: 'STARDUST1-S',
+        location: 'nl-ams-1',
+        image: '3f1b9623-71ba-4fe3-b994-27fcdaa850ba'
+      }
+    ]
   },
 
+  apiToken: '',
   apps: [
     {
       name: 'Site.js',

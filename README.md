@@ -45,6 +45,7 @@ Domain provides support for the following service providers. You will need to ge
 ### VPS
 
   - [Hetzner Cloud](https://www.hetzner.com/cloud)
+  - [Scaleway Elements](https://www.scaleway.com/elements/)
 
 ### Payment
 

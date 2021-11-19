@@ -41,13 +41,16 @@ export const hostDetails = {
   },
 
   vps: {
-    provider: 'Hetzner',
-    apiToken: 'thisisnotmyrealapitoken',
-    sshKeyName: '20201210-1',
-    serverType: 'cpx11',
-    location: 'hel1',
-    image: 'ubuntu-20.04',
-    cloudInit: `#cloud-config
+    provider: 0,
+    providers: [
+      {
+        name: 'Hetzner',
+        apiToken: 'thisisnotmyrealapitoken',
+        sshKeyName: '20201210-1',
+        serverType: 'cpx11',
+        location: 'hel1',
+        image: 'ubuntu-20.04',
+        cloudInit: `#cloud-config
 
 # Configures a basic Site.js server.
 write_files:
@@ -84,5 +87,52 @@ runcmd:
 
 final_message: "Welcome to your Small Web site powered by Site.js. Setup took $UPTIME seconds."
     `
+      },
+      {
+        name: 'Scaleway',
+        apiToken: 'thisisnotmyrealapitoken',
+        sshKeyName: 'FIXME',
+        serverType: 'STARDUST1-S',
+        location: 'nl-ams-1',
+        image: '3f1b9623-71ba-4fe3-b994-27fcdaa850ba',
+        cloudInit: `#cloud-config
+
+# Configures a basic Site.js server.
+write_files:
+- path: /home/site/public/index.html
+  permissions: '0755'
+  content: |
+    <!DOCTYPE html>
+    <html lang='en'>
+    <title>Welcome to the Small Web!</title>
+    <h1>Welcome to your Small Web site powered by Site.js.</h1>
+
+users:
+- name: site
+  gecos: Site.JS
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  lock_passwd: true
+  ssh_authorized_keys:
+    - {{sshKey}}
+  groups: sudo
+  shell: /bin/bash
+
+disable_root: true
+
+runcmd:
+- ufw allow OpenSSH
+- ufw enable
+- ufw allow 80/tcp
+- ufw allow 443/tcp
+- chown -R site:site /home/site
+- hostnamectl set-hostname {{subdomain}}.small-web.org
+- su site -c 'wget -qO- https://sitejs.org/install | bash'
+- su site -c 'mkdir /home/site/public'
+- su site -c 'site enable /home/site/public --skip-domain-reachability-check --ensure-can-sync'
+
+final_message: "Welcome to your Small Web site powered by Site.js. Setup took $UPTIME seconds."
+    `
+      }
+    ]
   }
 }
