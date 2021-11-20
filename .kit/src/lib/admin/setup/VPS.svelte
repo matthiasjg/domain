@@ -32,9 +32,10 @@
 
     const { provider, serverTypes, locations, images, sshKeys } = vpsDetails;
 
-    const vpsProvider = settings.vps.providers.find((vpsProvider) => {
-      return vpsProvider.name === provider.name;
-    }) || settings.vps.providers[0];
+    const vpsProvider =
+      settings.vps.providers.find((vpsProvider) => {
+        return vpsProvider.name === provider.name;
+      }) || settings.vps.providers[0];
 
     const vpsServerType = serverTypes.find((serverType) => {
       return serverType.name === vpsProvider.serverType;
@@ -70,10 +71,6 @@
     state.set(state.NOT_OK, { error: message.error });
 
   // Settings getter/ setter helpers.
-
-  function getVpsProviderProperty(prop) {
-    return settings.vps.providers[settings.vps.provider][prop];
-  }
 
   function setVpsProvider(providerName) {
     const providerIdx = settings.vps.providers.findIndex(
@@ -205,10 +202,9 @@
   </select>
   {#if state.OK.vpsProvider}
     <p class="vpsItemDetails">
-      {getVpsProviderProperty("serverType")} server type, {getVpsProviderProperty(
-        "location"
-      )} location,
-      {getVpsProviderProperty("image")} image.
+      {state.OK.vpsProvider.serverType} server type, {state.OK.vpsProvider
+        .location} location,
+      {state.OK.vpsProvider.image} image.
     </p>
   {/if}
 
