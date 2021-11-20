@@ -2,10 +2,11 @@ const fetch = require('node-fetch')
 
 module.exports = async (request, response) => {
 
-  const domain = request.params.domain
+  const domain = db.settings.dns.domain
+  const subdomain = request.params.domain
 
   try {
-    await fetch(`https://${domain}.small-web.org`)
+    await fetch(`https://${subdomain}.${domain}`)
   } catch (error) {
     response.json(false)
   }
