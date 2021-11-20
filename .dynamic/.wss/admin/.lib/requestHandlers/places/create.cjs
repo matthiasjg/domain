@@ -1,10 +1,15 @@
-const HetznerCloud = require('hcloud-js')
+const vpsProviders = {
+  Hetzner: require('./vpsproviders/hetzner.cjs'),
+  Scaleway: require('./vpsproviders/scaleway.cjs')
+}
+
 const dnsimple = require('dnsimple')
 
 module.exports = async (remote, message) => {
   console.log('Creating new Place…')
   console.log(message)
 
+  const domain = db.settings.dns.domain
   const subdomain = message.domain
   const appIndex = parseInt(message.app)
   const publicKeys = message.publicKeys
@@ -45,8 +50,14 @@ module.exports = async (remote, message) => {
     status: 'setup-started'
   }
 
-  // TODO: Handle errors in VPS / DNS service constructors.
-  const webHost = new HetznerCloud.Client(db.settings.vps.apiToken)
+  const provider = db.settings.vps.providers[db.settings.vps.provider]
+
+  if (!provider || !provider.name || !Object.keys(vpsProviders).includes(provider.name)) {
+    return remote.places.create.error.send({ subject: 'vps', error: 'Could not create Place, invalid provider.' })
+  }
+
+  const { createServer, getCreateServerStatus } = vpsProviders[provider.name]
+  // TODO: Handle errors in DNS service constructors.
   const dnsHost = dnsimple({
     accessToken: db.settings.dns.accessToken
   })
@@ -54,29 +65,20 @@ module.exports = async (remote, message) => {
   const app = db.settings.apps[appIndex]
   let cloudInit = app.cloudInit
   cloudInit = cloudInit.replace('{{SSH_KEY}}', db.settings.vps.sshKey)
+  cloudInit = cloudInit.replace('{{sshKey}}', db.settings.vps.sshKey)
+  cloudInit = cloudInit.replace('{{DOMAIN}}', domain)
+  cloudInit = cloudInit.replace('{{domain}}', domain)
   cloudInit = cloudInit.replace('{{SUBDOMAIN}}', subdomain)
+  cloudInit = cloudInit.replace('{{subdomain}}', subdomain)
 
   console.log('Creating app: ', app.name)
 
   console.log(cloudInit)
 
   // Create the server and store the returned IP address.
-  //
-  // Note: while the Hetzner API documentation states that the
-  // ===== sshKey provided in the call is optional, if it is not
-  //       provided (a) a root password is set (which we don’t want)
-  //       and the sudo account creation fails during cloud-config/cloud-init.
-  let serverBuildResult
-  try {
-    serverBuildResult = await webHost.servers.build()
-    .name(`${subdomain}.small-web.org`)
-    .serverType(db.settings.vps.serverType)
-    .location(db.settings.vps.location)
-    .image(db.settings.vps.image)
-    .sshKey(db.settings.vps.sshKeyName)
-    .userData(cloudInit)
-    .create()
-  } catch (error) {
+  const serverBuildResult = await createServer(provider, domain, subdomain, cloudInit)
+  if (serverBuildResult.error) {
+    const { error } = serverBuildResult
     console.error('Create server VPS error', error)
     return remote.places.create.error.send({ subject: 'vps', error })
   }
@@ -125,7 +127,7 @@ module.exports = async (remote, message) => {
     dnsZoneCreationResponse = await dnsHost.zones.createZoneRecord(
       accountId = db.settings.dns.accountId,
       domainId = db.settings.dns.domain,
-      attributes = {name: subdomain, type: 'A', content: ipv4, ttl: 60}
+      attributes = { name: subdomain, type: 'A', content: ipv4, ttl: 60 }
     )
     console.log(dnsZoneCreationResponse)
   } catch (error) {
@@ -143,21 +145,21 @@ module.exports = async (remote, message) => {
 
   let serverBuildSuccess = false
   while (!serverBuildSuccess) {
-    const action = await webHost.actions.get(serverBuildResult.action.id)
+    const createServerStatus = await getCreateServerStatus(provider, serverBuildResult.action.id)
 
-    if (action.status === 'error') {
+    if (createServerStatus.status === 'error') {
       db.domains[subdomain].status = `setup-vps-creation-failed`
-      return remote.places.create.error.send({ subject: 'vps', error: action.error })
+      return remote.places.create.error.send({ subject: 'vps', error: createServerStatus.error })
     }
 
     remote.places.create.progress.send({
       subject: 'vps',
-      status: action.status,
-      progress: action.progress,
-      finished: action.finished
+      status: createServerStatus.status,
+      progress: createServerStatus.progress,
+      finished: createServerStatus.finished
     })
 
-    serverBuildSuccess = (action.status === 'success')
+    serverBuildSuccess = (createServerStatus.status === 'success')
   }
 
   db.domains[subdomain].status = `setup-vps-created`
