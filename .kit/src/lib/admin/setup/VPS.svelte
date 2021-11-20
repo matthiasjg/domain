@@ -85,29 +85,18 @@
 
   // Local event handlers.
 
-  function vpsProviderChange() {
-    setVpsProvider(state.OK.vpsProvider.name);
-    validateSettings();
-  }
-
-  function vpsServerTypeChange() {
-    setVpsProviderProperty("serverType", state.OK.vpsServerType.name);
-    validateSettings();
-  }
-
-  function vpsLocationChange() {
-    setVpsProviderProperty("location", state.OK.vpsLocation.name);
-    validateSettings();
-  }
-
-  function vpsImageChange() {
-    setVpsProviderProperty("image", state.OK.vpsImage.name);
-    validateSettings();
-  }
-
-  function vpsSshKeyChange() {
-    setVpsProviderProperty("sshKeyName", state.OK.vpsSshKey.name);
-    setVpsProviderProperty("sshKey", state.OK.vpsSshKey.public_key);
+  function vpsProviderPropertyChange() {
+    if (state.OK.vpsProvider) setVpsProvider(state.OK.vpsProvider.name);
+    if (state.OK.vpsServerType)
+      setVpsProviderProperty("serverType", state.OK.vpsServerType.name);
+    if (state.OK.vpsLocation)
+      setVpsProviderProperty("location", state.OK.vpsLocation.name);
+    if (state.OK.vpsImage)
+      setVpsProviderProperty("image", state.OK.vpsImage.name);
+    if (state.OK.vpsSshKey) {
+      setVpsProviderProperty("sshKeyName", state.OK.vpsSshKey.name);
+      setVpsProviderProperty("sshKey", state.OK.vpsSshKey.public_key);
+    }
     validateSettings();
   }
 </script>
@@ -194,7 +183,7 @@
   <select
     id="vpsProvider"
     bind:value={state.OK.vpsProvider}
-    on:change={vpsProviderChange}
+    on:change={vpsProviderPropertyChange}
   >
     {#each settings.vps.providers as provider}
       <option value={provider}>{provider.name}</option>
@@ -225,7 +214,7 @@
   <select
     id="vpsSshKey"
     bind:value={state.OK.vpsSshKey}
-    on:change={vpsSshKeyChange}
+    on:change={vpsProviderPropertyChange}
   >
     {#each state.OK.vpsDetails.sshKeys as sshKey}
       <option
@@ -254,7 +243,7 @@
     <select
       id="vpsLocation"
       bind:value={state.OK.vpsLocation}
-      on:change={vpsLocationChange}
+      on:change={vpsProviderPropertyChange}
     >
       {#each state.OK.vpsDetails.locations as location}
         <option value={location}
@@ -277,7 +266,7 @@
     <select
       id="vpsServerType"
       bind:value={state.OK.vpsServerType}
-      on:change={vpsServerTypeChange}
+      on:change={vpsProviderPropertyChange}
     >
       {#each state.OK.vpsDetails.serverTypes as serverType}
         <option value={serverType}>{serverType.description}</option>
@@ -298,7 +287,7 @@
     <select
       id="vpsImage"
       bind:value={state.OK.vpsImage}
-      on:change={vpsImageChange}
+      on:change={vpsProviderPropertyChange}
     >
       {#each state.OK.vpsDetails.images as image}
         <option value={image}>{image.description}</option>
